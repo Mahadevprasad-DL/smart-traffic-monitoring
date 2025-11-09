@@ -26,7 +26,7 @@ colors = np.random.uniform(0, 255, size=(len(classes), 3))
 # -----------------------------
 # TomTom Traffic Configuration
 # -----------------------------
-TOMTOM_API_KEY = "1vo0s7uUAWLbKwsfQY4IherNlc0hpKGk"
+TOMTOM_API_KEY = "  "  // use your tomtom API key here //
 BENGALURU_BBOX = {
     "minLon": 77.4500,
     "minLat": 12.8500,
@@ -237,3 +237,4 @@ def upload():
 # -----------------------------
 if __name__ == "__main__":
     socketio.run(app, debug=True)
+
