@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bengaluru Traffic Analytics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ===== GLOBAL STYLES ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #94a3b8;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .search-container {
+      position: relative;
+      margin: 2rem 0;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1rem 1rem 3rem;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      color: white;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: #64748b;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+    }
+
+    .dropdown {
+      position: absolute;
+      width: 100%;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .dropdown button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: white;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .dropdown button:hover {
+      background: #334155;
+    }
+
+    .charts-container {
+      margin-top: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    canvas {
+      background: #1e293b;
+      border-radius: 1rem;
+      padding: 1rem;
+      width: 100% !important;
+      max-height: 400px;
+    }
+
+    #pieChart {
+      max-height: 450px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid #334155;
+      border-radius: 1rem;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+      transform: scale(1.05);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .text-green-400 { color: #4ade80; }
+    .text-yellow-400 { color: #facc15; }
+    .text-orange-400 { color: #fb923c; }
+    .text-red-400 { color: #f87171; }
+    .text-blue-400 { color: #3b82f6; }
+    .text-purple-400 { color: #a855f7; }
+
+    /* ===== NAVBAR FIXED UPDATE ===== */
+    .navbar {
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-icon {
+      font-size: 1.4rem;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ✅ Updated per your request */
+    .nav-links a {
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: #f97316;
+    }
+
+    .nav-item.active a {
+      color: #f97316;
+      font-weight: 700;
+    }
+
+    .nav-item.active a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -4px;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to right, #f97316, #ef4444);
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+      <div class="nav-logo">
+          <span class="logo-icon">🚦</span>
+          <span class="logo-text">Urban Traffic Management System</span>
+      </div>
+      <ul class="nav-links" id="nav-links">
+          <li class="nav-item"><a href="{{ url_for('home') }}">Home</a></li>
+          <li class="nav-item"><a href="{{ url_for('analytics') }}">Analytics</a></li>
+          <li class="nav-item"><a href="{{ url_for('video') }}">Video Analysis</a></li>
+          <li class="nav-item"><a href="{{ url_for('predictions') }}">Predictions</a></li>
+          <li class="nav-item"><a href="{{ url_for('heatmap') }}">Heatmap</a></li>
+      </ul>
+  </div>
+</nav>
+
+  <div class="container">
+    <h2>Traffic Analytics Dashboard</h2>
+    <p>Select an area to view detailed traffic insights</p>
+
+    <div class="search-container">
+      <i class="search-icon">🔍</i>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search Bengaluru area..." />
+      <div id="dropdown" class="dropdown" style="display: none;"></div>
+    </div>
+
+    <div id="stats" class="stats-grid"></div>
+
+    <div class="charts-container">
+      <canvas id="lineChart"></canvas>
+      <canvas id="barChart"></canvas>
+      <canvas id="pieChart"></canvas>
+      <canvas id="weeklyChart"></canvas>
+    </div>
+  </div>
+
+<script>
+  const bangaloreAreas = [
+    'Whitefield','Electronic City','Koramangala','Indiranagar','Jayanagar','Marathahalli',
+    'HSR Layout','BTM Layout','Bellandur','Sarjapur Road','Bannerghatta Road','Hebbal',
+    'Yeshwanthpur','Rajajinagar','Malleshwaram','MG Road','Brigade Road','Silk Board',
+    'KR Puram','Yelahanka','JP Nagar','Banashankari','Vijayanagar','Kengeri','Peenya',
+    'RT Nagar','Kalyan Nagar','CV Raman Nagar','Domlur','Old Airport Road'
+  ].sort();
+
+  const randomData = (area, index, min, max) => {
+    const seed = area.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const x = Math.sin(seed + index) * 10000;
+    return min + ((x - Math.floor(x)) * (max - min));
+  };
+
+  function getTrafficData(area) {
+    return {
+      area,
+      peakHourCongestion: Math.round(randomData(area, 1, 30, 95)),
+      avgSpeed: Math.round(randomData(area, 2, 15, 45)),
+      vehicleCount: Math.round(randomData(area, 3, 5000, 25000)),
+      accidentRate: Math.round(randomData(area, 4, 2, 15) * 10) / 10,
+      airQualityIndex: Math.round(randomData(area, 5, 50, 250))
+    };
+  }
+
+  function getHourlyData(area) {
+    const hours = ['6 AM','8 AM','10 AM','12 PM','2 PM','4 PM','6 PM','8 PM','10 PM'];
+    const seed = area.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return hours.map((h, i) => {
+      const x = Math.sin(seed + i) * 10000;
+      const norm = x - Math.floor(x);
+      const peak = (i === 1 || i === 6) ? 1.5 : 1;
+      return { hour: h, congestion: Math.round(norm * 60 * peak + 30), vehicles: Math.round(norm * 15000 * peak + 5000) };
+    });
+  }
+
+  function getVehicleDistribution(area) {
+    const seed = area.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const r = i => (Math.sin(seed + i) * 10000) - Math.floor(Math.sin(seed + i) * 10000);
+    return [
+      { type: 'Cars', count: Math.round(r(1) * 5000 + 8000) },
+      { type: 'Bikes', count: Math.round(r(2) * 6000 + 10000) },
+      { type: 'Buses', count: Math.round(r(3) * 1000 + 1500) },
+      { type: 'Auto Rickshaws', count: Math.round(r(4) * 3000 + 4000) },
+      { type: 'Trucks', count: Math.round(r(5) * 2000 + 2000) },
+    ];
+  }
+
+  function getWeeklyData(area) {
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const seed = area.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return days.map((d, i) => {
+      const x = Math.sin(seed + i * 10) * 10000;
+      const norm = x - Math.floor(x);
+      const weekend = (i >= 5) ? 0.7 : 1;
+      return { day: d, avgCongestion: Math.round(norm * 50 * weekend + 40) };
+    });
+  }
+
+  const input = document.getElementById('searchInput');
+  const dropdown = document.getElementById('dropdown');
+  input.addEventListener('input', () => {
+    const val = input.value.toLowerCase();
+    const matches = bangaloreAreas.filter(a => a.toLowerCase().includes(val));
+    if (!val) { dropdown.style.display = 'none'; return; }
+
+    dropdown.innerHTML = matches.map(a => `<button>${a}</button>`).join('');
+    dropdown.style.display = 'block';
+
+    dropdown.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        input.value = btn.textContent;
+        dropdown.style.display = 'none';
+        renderCharts(btn.textContent);
+      });
+    });
+  });
+
+  let lineChart, barChart, pieChart, weeklyChart;
+
+  function renderCharts(area) {
+    const stats = getTrafficData(area);
+    const hourly = getHourlyData(area);
+    const vehicle = getVehicleDistribution(area);
+    const weekly = getWeeklyData(area);
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-card"><div class="stat-value text-${getCongestionColor(stats.peakHourCongestion)}">${stats.peakHourCongestion}%</div><div>Peak Congestion</div></div>
+      <div class="stat-card"><div class="stat-value text-blue-400">${stats.avgSpeed}</div><div>Avg Speed (km/h)</div></div>
+      <div class="stat-card"><div class="stat-value text-purple-400">${(stats.vehicleCount / 1000).toFixed(1)}k</div><div>Daily Vehicles</div></div>
+      <div class="stat-card"><div class="stat-value text-red-400">${stats.accidentRate}</div><div>Accident Rate</div></div>
+      <div class="stat-card"><div class="stat-value text-${getAQIColor(stats.airQualityIndex)}">${stats.airQualityIndex}</div><div>Air Quality Index</div></div>
+    `;
+
+    [lineChart, barChart, pieChart, weeklyChart].forEach(c => c && c.destroy());
+
+    lineChart = new Chart(document.getElementById('lineChart'), {
+      type: 'line',
+      data: { labels: hourly.map(d => d.hour), datasets: [{ label: 'Congestion %', data: hourly.map(d => d.congestion), borderColor: '#f97316', fill: true, backgroundColor: 'rgba(249,115,22,0.1)' }] },
+      options: { plugins: { legend: { labels: { color: 'white' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
+    });
+
+    barChart = new Chart(document.getElementById('barChart'), {
+      type: 'bar',
+      data: { labels: hourly.map(d => d.hour), datasets: [{ label: 'Vehicle Count', data: hourly.map(d => d.vehicles), backgroundColor: 'rgba(59,130,246,0.5)' }] },
+      options: { plugins: { legend: { labels: { color: 'white' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
+    });
+
+    pieChart = new Chart(document.getElementById('pieChart'), {
+      type: 'pie',
+      data: { labels: vehicle.map(v => v.type), datasets: [{ data: vehicle.map(v => v.count), backgroundColor: ['#3b82f6','#a855f7','#f97316','#10b981','#eab308'] }] },
+      options: { plugins: { legend: { labels: { color: 'white' } } } }
+    });
+
+    weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+      type: 'bar',
+      data: { labels: weekly.map(d => d.day), datasets: [{ label: 'Avg Congestion %', data: weekly.map(d => d.avgCongestion), backgroundColor: 'rgba(168,85,247,0.6)' }] },
+      options: { plugins: { legend: { labels: { color: 'white' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
+    });
+  }
+
+  function getAQIColor(aqi) {
+    if (aqi <= 50) return 'green-400';
+    if (aqi <= 100) return 'yellow-400';
+    if (aqi <= 150) return 'orange-400';
+    return 'red-400';
+  }
+
+  function getCongestionColor(level) {
+    if (level <= 40) return 'green-400';
+    if (level <= 70) return 'yellow-400';
+    return 'red-400';
+  }
+</script>
+</body>
+</html>

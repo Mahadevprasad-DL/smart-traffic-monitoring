@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bengaluru Traffic Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #0f172a, #1e293b);
+      color: #fff;
+    }
+
+    a {
+      text-decoration: none;
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    /* ======= GRID CARDS ======= */
+    .container {
+      max-width: 1200px;
+      margin: 4rem auto;
+      padding: 0 1.5rem 4rem;
+    }
+
+    .grid {
+      display: grid;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .card {
+      background: rgba(30,41,59,0.5);
+      border: 1px solid #334155;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      backdrop-filter: blur(6px);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 25px rgba(249,115,22,0.2);
+      border-color: #f97316;
+    }
+
+    .icon-box {
+      display: inline-flex;
+      padding: 1rem;
+      border-radius: 1rem;
+      margin-bottom: 1.5rem;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover .icon-box {
+      transform: scale(1.15);
+    }
+
+    .card h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .card p {
+      font-size: 1rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      color: #fff;
+      border: none;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(249,115,22,0.4);
+    }
+
+    .from-blue { background: linear-gradient(to right, #3b82f6, #06b6d4); }
+    .from-purple { background: linear-gradient(to right, #8b5cf6, #ec4899); }
+    .from-orange { background: linear-gradient(to right, #f97316, #ef4444); }
+    .from-green { background: linear-gradient(to right, #22c55e, #10b981); }
+
+    /* ======= STAT CARDS ======= */
+    .stat-card {
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-text {
+      color: #94a3b8;
+    }
+
+    .blue-light { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); }
+    .green-light { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+    .purple-light { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); }
+
+    /* ======= NAVBAR ======= */
+    .navbar {
+      background: rgba(15, 23, 42, 0.9);
+      border-bottom: 1px solid rgba(51, 65, 85, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1.3rem;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-item a:hover,
+    .nav-item.active a {
+      color: #f97316;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <span class="logo-icon">🚦</span>
+      <span class="logo-text">Urban Traffic Management System</span>
+    </div>
+    <ul class="nav-links">
+      <li class="nav-item {% if request.path == '/' %}active{% endif %}">
+        <a href="{{ url_for('home') }}">Home</a>
+      </li>
+      <li class="nav-item {% if '/analytics' in request.path %}active{% endif %}">
+        <a href="{{ url_for('analytics') }}">Analytics</a>
+      </li>
+      <li class="nav-item {% if '/video-analysis' in request.path %}active{% endif %}">
+        <a href="{{ url_for('video') }}">Video Analysis</a>
+      </li>
+      <li class="nav-item {% if '/predictions' in request.path %}active{% endif %}">
+        <a href="{{ url_for('predictions') }}">Predictions</a>
+      </li>
+      <li class="nav-item {% if '/heatmap' in request.path %}active{% endif %}">
+        <a href="{{ url_for('heatmap') }}">Heatmap</a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="grid grid-2" style="margin-bottom:4rem;">
+
+    <!-- CARD 1 -->
+    <div class="card">
+      <div class="icon-box from-blue">
+        <i data-lucide="bar-chart-3" style="color:#fff;"></i>
+      </div>
+      <h3>Traffic Analytics</h3>
+      <p>Explore real-time traffic data across Bengaluru. Select any area to view detailed congestion patterns, vehicle counts, and speed analytics.</p>
+      <a href="{{ url_for('analytics') }}" class="btn from-blue">Explore Analytics</a>
+    </div>
+
+    <!-- CARD 2 -->
+    <div class="card">
+      <div class="icon-box from-purple">
+        <i data-lucide="video" style="color:#fff;"></i>
+      </div>
+      <h3>Video Analysis</h3>
+      <p>Upload traffic video footage for AI-powered vehicle detection and counting. Get instant insights on vehicle types and traffic density.</p>
+      <a href="{{ url_for('video') }}" class="btn from-purple">Analyze Video</a>
+    </div>
+
+    <!-- CARD 3 -->
+    <div class="card">
+      <div class="icon-box from-orange">
+        <i data-lucide="trending-up" style="color:#fff;"></i>
+      </div>
+      <h3>Traffic Predictions</h3>
+      <p>Access predictive models for traffic congestion. Plan your routes based on historical patterns and real-time predictions.</p>
+      <a href="{{ url_for('predictions') }}" class="btn from-orange">View Predictions</a>
+    </div>
+
+    <!-- CARD 4 -->
+    <div class="card">
+      <div class="icon-box from-green">
+        <i data-lucide="map" style="color:#fff;"></i>
+      </div>
+      <h3>Traffic Heatmap</h3>
+      <p>Visualize traffic intensity across the city with interactive heatmaps. Identify congestion hotspots at a glance.</p>
+      <a href="{{ url_for('heatmap') }}" class="btn from-green">View Heatmap</a>
+    </div>
+
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="grid grid-3">
+    <div class="stat-card blue-light">
+      <div class="stat-title" style="color:#60a5fa;">30+</div>
+      <div class="stat-text">Areas Monitored</div>
+    </div>
+    <div class="stat-card green-light">
+      <div class="stat-title" style="color:#4ade80;">Real-time</div>
+      <div class="stat-text">Data Updates</div>
+    </div>
+    <div class="stat-card purple-light">
+      <div class="stat-title" style="color:#c084fc;">AI-Powered</div>
+      <div class="stat-text">Analysis Engine</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+</script>
+
+</body>
+</html>

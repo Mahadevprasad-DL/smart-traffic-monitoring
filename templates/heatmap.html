@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bengaluru Traffic Heatmap</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-8 text-white">
+
+<!-- 🌆 Navbar -->
+<nav class="bg-slate-900/80 border-b border-slate-700 sticky top-0 z-50 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto flex justify-between items-center px-6 py-3">
+    <div class="flex items-center text-xl font-bold text-white gap-2">🚦 Urban Traffic Management</div>
+    <div class="flex gap-6 text-slate-300">
+      <a href="{{ url_for('home') }}">Home</a>
+      <a href="{{ url_for('analytics') }}">Analytics</a>
+      <a href="{{ url_for('video') }}">Video Analysis</a>
+      <a href="{{ url_for('predictions') }}">Predictions</a>
+      <a class="text-orange-400 font-semibold" href="{{ url_for('heatmap') }}">Heatmap</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 🗺️ Main Section -->
+<div class="max-w-6xl mx-auto px-4">
+  <h1 class="text-3xl font-bold mt-8 mb-4">Live Bengaluru Traffic Heatmap</h1>
+  <p class="text-slate-400 mb-6">Real-time congestion by area (Top 10)</p>
+
+  <!-- 📊 Chart -->
+  <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mb-8">
+    <canvas id="trafficChart" height="120"></canvas>
+    <p class="text-slate-400 mt-3 text-sm text-right">Auto-refreshes every 1 minute 🔄</p>
+  </div>
+
+  <!-- 📋 Area List -->
+  <div id="areaList" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+</div>
+
+<!-- ⚙️ JavaScript -->
+<script>
+let chart;
+
+// Fetch real-time heatmap data from backend
+async function fetchHeatmapData() {
+  try {
+    const res = await fetch("/api/heatmap");
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      document.getElementById("areaList").innerHTML = "<p class='text-slate-400 text-center'>No traffic data available.</p>";
+      if (chart) chart.destroy();
+      return;
+    }
+
+    // Replace or skip "Unknown Area"
+    const cleanedData = data.map(d => ({
+      area: d.area === "Unknown Area" ? "In Bengaluru Area" : d.area,
+      incidents: d.incidents,
+      percent: d.percent
+    }));
+
+    const areas = cleanedData.map(d => d.area);
+    const counts = cleanedData.map(d => d.incidents);
+    const percents = cleanedData.map(d => d.percent);
+
+    updateChart(areas, counts, percents);
+    renderAreaList(cleanedData);
+  } catch (err) {
+    console.error("Error fetching heatmap data:", err);
+  }
+}
+
+// Render Chart.js bar chart
+function updateChart(labels, values, percents) {
+  const ctx = document.getElementById("trafficChart").getContext("2d");
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Active Incidents",
+        data: values,
+        backgroundColor: values.map(v =>
+          v > 8 ? "rgba(239,68,68,0.8)" :
+          v > 5 ? "rgba(249,115,22,0.8)" :
+          "rgba(34,197,94,0.8)"
+        )
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: "Top 10 Congested Areas", color: "#fff" },
+        datalabels: {
+          color: "#fff",
+          anchor: "end",
+          align: "top",
+          font: { weight: "bold" },
+          formatter: (value, ctx) => `${percents[ctx.dataIndex]}%`
+        }
+      },
+      responsive: true,
+      scales: {
+        x: { ticks: { color: "#cbd5e1" } },
+        y: { beginAtZero: true, ticks: { color: "#cbd5e1" } }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+// Render area cards below chart
+function renderAreaList(data) {
+  const container = document.getElementById("areaList");
+  container.innerHTML = "";
+  data.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "bg-slate-800 border border-slate-700 rounded-xl p-4 hover:shadow-md transition";
+    div.innerHTML = `
+      <div class="flex justify-between mb-2">
+        <h3 class="font-semibold text-white">${item.area}</h3>
+        <span class="font-bold text-orange-400">${item.percent}%</span>
+      </div>
+      <p class="text-xs text-slate-400">${item.incidents} Active Incidents</p>`;
+    container.appendChild(div);
+  });
+}
+
+// Auto-refresh every 60 seconds
+fetchHeatmapData();
+setInterval(fetchHeatmapData, 60000);
+</script>
+</body>
+</html>
